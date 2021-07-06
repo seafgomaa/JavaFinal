@@ -5,15 +5,16 @@
  */
 package com.mycompany.test2;
 
-import java.util.*;
-import java.util.stream.Collectors;
-import org.apache.spark.api.java.function.ForeachFunction;
+
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.spark.sql.Dataset;
-import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
-import org.apache.spark.sql.SparkSession;
 import static org.apache.spark.sql.functions.col;
 import static org.apache.spark.sql.functions.desc;
+import static org.apache.spark.sql.functions.lit;
 
 /**
  *
@@ -24,7 +25,6 @@ public class Main {
    public static void main(String [] args){
     DAO da = new DAO();
     Operations op=new Operations();
-    final SparkSession sc = SparkSession.builder ().appName ("Spark CSV Analysis Demo").master ("local[2]").getOrCreate ();
     //Reading The data 
     Dataset<Row> ds = da.readcsv("C:\\Users\\iTs\\Desktop\\Java and UML_Amr Elshafey\\Wuzzuf_Jobs.csv");
     
@@ -57,32 +57,21 @@ public class Main {
             .sort(desc("count"))
             .show();
      
-    // Most requird skills
-    Dataset<Row> dr=ds.select(col("Skills"));
-   
-    List<String> ls = dr.map(row -> row.mkString(), Encoders.STRING()).collectAsList(); 
-    List<String> skills=new ArrayList<String>();
-    for (int i =0;i<ls.size();i++)
-    {
-        String [] a=ls.get(i).split(",");
-        for (int j=0;j<a.length;j++)
-        {
-            skills.add(a[j]);    
-        }
-    }
-    
-    Dataset<String> dataDs = sc.createDataset(skills, Encoders.STRING());
-   
-    dataDs.groupBy(col("value")) 
+    // Most requird skills    
+    op.wordExtractor(ds.select(col("Skills"))).groupBy(col("value")) 
             .count()
             .sort(desc("count"))
             .show();
+   
     
-
+    // experience
+    List<List<Double>> exp=op.expSeparator(ds.select(col("YearsExp")));
+    
+    
      op.graphPiChart(ds.select(col("Company")));
      op.graphBarChart(ds.select("Country"));
      op.graphBarChart(ds.select(col("Title")));
-
+     op.graphPiChart(ds.select(col("Company"))); 
    } 
    
 }

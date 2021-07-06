@@ -7,14 +7,14 @@ package com.mycompany.test2;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Encoders;
 import org.apache.spark.sql.Row;
-import static org.apache.spark.sql.functions.col;
-import static org.apache.spark.sql.functions.desc;
+import org.apache.spark.sql.SparkSession;
 import org.knowm.xchart.CategoryChart;
 import org.knowm.xchart.CategoryChartBuilder;
 import org.knowm.xchart.PieChart;
@@ -27,6 +27,8 @@ import org.knowm.xchart.style.Styler;
  * @author iTs
  */
 public class Operations {
+    
+     final SparkSession sc = SparkSession.builder ().appName ("Spark CSV Analysis Demo").master ("local[2]").getOrCreate ();
     
      public void showsummary(Dataset<Row> ds)
      {
@@ -46,8 +48,40 @@ public class Operations {
         System.out.println("Data Summary after dropping duplications and na: ");
         return ds;    
      }
+     
+     public Dataset<String> wordExtractor(Dataset<Row> ds)
+     {
+        List<String> ls=toList(ds);
+        List<String> words=new ArrayList<String>();
+        for (int i =0;i<ls.size();i++)
+        {
+            String [] a=ls.get(i).split(",");
+            words.addAll(Arrays.asList(a));
+        }
+        return toDataset(words);
+
+    }
+     
+    public List<List<Double>> expSeparator(Dataset<Row> ds)
+     {
+        List<String> ls=toList(ds);
+        List<List<Double>> exp=new ArrayList<List<Double>>();
+        List<Double> min= new ArrayList<Double>();
+        List<Double> max= new ArrayList<Double>();
+        for (int i =0;i<ls.size();i++)
+        {
+            String [] a=splitter(ls.get(i));
+            min.add(toDouble(a[0]));
+            max.add(toDouble(a[1]));
+            
+        }
+        exp.add(min);
+        exp.add(max);
+        
+        return exp;
+    }
     
-     public void graphPiChart(Dataset<Row> ds) {
+    public void graphPiChart(Dataset<Row> ds) {
         //filter to get a map of passenger class and total number of passengers in each clas
         List<String> ls = ds.map(row -> row.mkString(), Encoders.STRING()).collectAsList();
         Map<String, Long> counts =
@@ -63,7 +97,7 @@ public class Operations {
         new SwingWrapper (chart).displayChart ();
     }
     
-        public void graphBarChart(Dataset<Row> ds) {
+    public void graphBarChart(Dataset<Row> ds) {
         //filter to get an array of passenger ages
         List<String> ls = ds.map(row -> row.mkString(), Encoders.STRING()).collectAsList();
         Map<String, Long> counts =
@@ -81,7 +115,60 @@ public class Operations {
         chart.addSeries ("Histogram chart", x, y);
         // Show it
         new SwingWrapper (chart).displayChart ();
+    }
+    
+    // convert list to dataset    
+    public Dataset<String> toDataset(List<String> ls){
+      return sc.createDataset(ls, Encoders.STRING());
+    }
+    
+    public Dataset<Double> toDDataset(List<Double> ls){
+      return sc.createDataset(ls, Encoders.DOUBLE());
     } 
     
+    // convert dataset to list
+    public List<String> toList(Dataset<Row> ds){
+     return  ds.map(row -> row.mkString(), Encoders.STRING()).collectAsList();
+    }
+    
+    
+    
+    // Split Experience level into two fields
+    public String[] splitter(String x){
+        
+        try
+        {
+            if (!x.contains("+")){
+            String []a=new String[2];
+            a=x.split("-");
+            
+            if(a.length==2){a[1]=a[1].substring(0, 1);}
+            else{a[1]="";}
+
+            
+            return a;}
+            else {
+            return x.split("\\+");
+              }
+        
+        }
+        catch(ArrayIndexOutOfBoundsException e)
+        {
+            String [] b={"",""};
+            return b; }
+    }
+   
+    //from string to double
+    public double toDouble(String x){
+        
+        try
+        {
+            return Integer.parseInt(x);
+        }
+        catch(NumberFormatException e)
+        {
+            return 0;     
+        }
+    }
     
 }
