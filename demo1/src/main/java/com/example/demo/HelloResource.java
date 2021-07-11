@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloResource {
 
     @GetMapping("/hi")
-    public String hello(@RequestParam(defaultValue = "Mohamed") String name) {
+    public void hello(@RequestParam(defaultValue = "Mohamed") String name) {
         String temp="Hello, ";
-        return  temp+name;
+        System.out.println(temp+name);
     }
 }
