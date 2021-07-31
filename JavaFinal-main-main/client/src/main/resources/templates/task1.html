@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title> Job Information </title>
+    <meta charset="UTF-8">
+    <script>
+        var baseurl = "http://localhost:8080";
+        function loadjobss(){
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET",baseurl + "/t1",true);
+            xmlhttp.onreadystatechange = function() {
+                if(xmlhttp.readyState ===4 && xmlhttp.status ===200){
+                    var jobs = JSON.parse(xmlhttp.responseText);
+                    var tbltop = `<table>
+			    <tr><th>Rank</th><th>Name</th><th>Field Name</th><th>Count</th></tr>`;
+                    //main table content we fill from data from the rest call
+                    var main ="";
+                    for (i = 0; i < 10; i++){
+                        main += "<tr><td>"+jobs[i].rank+"</td><td>"+jobs[i].name+"</td><td>"+jobss[i].fieldname+"</td><td>"+jobs[i].count+"</td></tr>";
+                    }
+                    var tblbottom = "</table>";
+                    var tbl = tbltop + main + tblbottom;
+                    document.getElementById("jobinfo").innerHTML = tbl;
+                }
+            };
+            xmlhttp.send();
+        }
+        window.onload = function(){
+            loadjobss();
+        }
+    </script>
+</head>
+<body>
+<div id="jobinfo"> </div>
+</body>
+</html>
